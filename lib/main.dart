@@ -1,4 +1,9 @@
+import 'dart:convert';
+import 'dart:math';
+
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show rootBundle;
+import 'package:frases_do_dia/domain.dart';
 
 void main() => runApp(MaterialApp(
       home: Home(),
@@ -11,6 +16,32 @@ class Home extends StatefulWidget {
 }
 
 class _HomeState extends State<Home> {
+  @override
+  void initState() {
+    _loadCrosswordAsset().then((value) => this._phrase = value);
+    super.initState();
+  }
+
+  var _phrase;
+  var _generatedPhrase = "Clique abaixo para gerar uma frase!";
+
+  Future<List<Phrase>> _loadCrosswordAsset() async {
+    List<Phrase> phrasesByJson = List();
+
+    String jsonString = await rootBundle.loadString('data/phrases.json');
+
+    var json = jsonDecode(jsonString);
+
+    json.forEach((j) => phrasesByJson.add(Phrase.fromJson(j)));
+
+    return phrasesByJson;
+  }
+
+  Future<void> _generatePhrase() async {
+    var numberDrawn = Random().nextInt(_phrase.length);
+    _generatedPhrase = _phrase[numberDrawn].phrase;
+  }
+
   @override
   Widget build(BuildContext context) {
     return Scaffold(
@@ -27,7 +58,7 @@ class _HomeState extends State<Home> {
             children: <Widget>[
               Image.asset('images/logo.png'),
               Text(
-                "Clique abaixo para gerar uma frase!",
+                _generatedPhrase,
                 textAlign: TextAlign.justify,
                 style: TextStyle(
                   fontSize: 17,
@@ -45,7 +76,11 @@ class _HomeState extends State<Home> {
                   ),
                 ),
                 color: Colors.green,
-                onPressed: () {},
+                onPressed: () {
+                  setState(() {
+                    _generatePhrase();
+                  });
+                },
               )
             ],
           ),
